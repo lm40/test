@@ -277,9 +277,24 @@
 	holder.apply_hud(STATUS_HUD, sleepingimage)
 
 // Now for the actual AI stuff.
+// RS ADD
+/datum/ai_holder
+	var/busy_since = 0
+
+
 /datum/ai_holder/proc/set_busy(var/value = 0)
+	if(value && !busy)
+		busy_since = world.time
+	else if(!value)
+		busy_since = 0
 	busy = value
 	update_paused_hud()
+
+/datum/ai_holder/proc/clear_stranded_busy()
+	log_world("AI: [holder || "a holder with no pawn"] had `busy` set for [(world.time - busy_since) / 10]s, \
+		which is past the [AI_BUSY_WATCHDOG / 10]s failsafe. Clearing it. Something raised busy and never lowered it - \
+		most likely a runtime inside an INVOKE_ASYNC that unwound before its set_busy(FALSE).")
+	set_busy(FALSE)
 
 // Makes this ai holder not get processed.
 // Called automatically when the host mob is killed.
